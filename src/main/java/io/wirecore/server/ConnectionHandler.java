@@ -1,8 +1,8 @@
 package io.wirecore.server;
 
-import io.wirecore.abstraction.HttpRequestParser;
-import io.wirecore.abstraction.RouteResult;
-import io.wirecore.abstraction.Router;
+import io.wirecore.port.HttpRequestParser;
+import io.wirecore.port.RouteResult;
+import io.wirecore.port.Router;
 import io.wirecore.model.HttpMethod;
 import io.wirecore.model.HttpRequest;
 import io.wirecore.model.HttpResponse;

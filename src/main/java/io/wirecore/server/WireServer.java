@@ -1,8 +1,8 @@
 package io.wirecore.server;
 
-import io.wirecore.abstraction.HttpRequestParser;
-import io.wirecore.abstraction.HttpServer;
-import io.wirecore.abstraction.Router;
+import io.wirecore.port.HttpRequestParser;
+import io.wirecore.port.HttpServer;
+import io.wirecore.port.Router;
 
 import java.io.IOException;
 import java.net.ServerSocket;

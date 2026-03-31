@@ -1,7 +1,7 @@
 package io.wirecore.routing;
 
-import io.wirecore.abstraction.RouteHandler;
-import io.wirecore.abstraction.RouteResult;
+import io.wirecore.port.RouteHandler;
+import io.wirecore.port.RouteResult;
 import io.wirecore.model.HttpMethod;
 
 import java.util.ArrayList;

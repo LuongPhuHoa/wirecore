@@ -1,4 +1,4 @@
-package io.wirecore.abstraction;
+package io.wirecore.port;
 
 import io.wirecore.model.HttpMethod;
 

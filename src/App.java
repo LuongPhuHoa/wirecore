@@ -1,5 +1,5 @@
-import io.wirecore.abstraction.HttpServer;
-import io.wirecore.abstraction.Router;
+import io.wirecore.port.HttpServer;
+import io.wirecore.port.Router;
 import io.wirecore.server.WireServer;
 import io.wirecore.service.DefaultRouter;
 

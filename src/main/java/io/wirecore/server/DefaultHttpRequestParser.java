@@ -1,6 +1,6 @@
 package io.wirecore.server;
 
-import io.wirecore.abstraction.HttpRequestParser;
+import io.wirecore.port.HttpRequestParser;
 import io.wirecore.model.HttpMethod;
 import io.wirecore.model.HttpRequest;
 

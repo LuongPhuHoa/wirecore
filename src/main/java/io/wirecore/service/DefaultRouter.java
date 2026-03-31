@@ -1,8 +1,8 @@
 package io.wirecore.service;
 
-import io.wirecore.abstraction.RouteHandler;
-import io.wirecore.abstraction.RouteResult;
-import io.wirecore.abstraction.Router;
+import io.wirecore.port.RouteHandler;
+import io.wirecore.port.RouteResult;
+import io.wirecore.port.Router;
 import io.wirecore.model.HttpMethod;
 import io.wirecore.routing.Route;
 import io.wirecore.routing.RouteTable;

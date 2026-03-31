@@ -1,0 +1,48 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# IDE - IntelliJ
+.idea/
+*.iml
+out/
+
+# IDE - Eclipse
+.project
+.classpath
+.settings/
+
+# IDE - VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Build folders
+target/
+build/
+bin/
+
+# Temporary files
+*.tmp
+*.swp
+
+# Environment files
+.env

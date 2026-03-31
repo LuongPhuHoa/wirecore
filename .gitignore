@@ -26,9 +26,6 @@ out/
 .classpath
 .settings/
 
-# IDE - VS Code
-.vscode/
-
 # MacOS
 .DS_Store
 

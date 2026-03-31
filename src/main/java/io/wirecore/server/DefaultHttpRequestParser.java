@@ -19,6 +19,9 @@ import java.util.Map;
  */
 public final class DefaultHttpRequestParser implements HttpRequestParser {
     private static final Charset ISO_8859_1 = StandardCharsets.ISO_8859_1;
+    private static final int MAX_LINE_LENGTH = 8_192;
+    private static final int MAX_HEADER_COUNT = 100;
+    private static final int MAX_BODY_SIZE = 10 * 1024 * 1024;
 
     @Override
     public HttpRequest parse(InputStream input) throws IOException {
@@ -64,6 +67,9 @@ public final class DefaultHttpRequestParser implements HttpRequestParser {
             }
             String name = line.substring(0, colon).trim().toLowerCase();
             String value = line.substring(colon + 1).trim();
+            if (headers.size() >= MAX_HEADER_COUNT) {
+                throw new IOException("Too many headers (limit: " + MAX_HEADER_COUNT + ")");
+            }
             headers.put(name, value);
         }
 
@@ -77,6 +83,9 @@ public final class DefaultHttpRequestParser implements HttpRequestParser {
             }
             if (contentLength < 0) {
                 throw new IOException("Invalid Content-Length: " + contentLength);
+            }
+            if (contentLength > MAX_BODY_SIZE) {
+                throw new IOException("Body too large: " + contentLength + " (limit: " + MAX_BODY_SIZE + ")");
             }
         }
 
@@ -104,6 +113,9 @@ public final class DefaultHttpRequestParser implements HttpRequestParser {
     private static String readLine(InputStream in) throws IOException {
         ByteArrayBuilder buf = new ByteArrayBuilder(256);
         while (true) {
+            if (buf.length() > MAX_LINE_LENGTH) {
+                throw new IOException("Request line exceeds " + MAX_LINE_LENGTH + " bytes");
+            }
             int b = in.read();
             if (b == -1) {
                 return buf.length() == 0 ? null : buf.toString(ISO_8859_1);

@@ -53,17 +53,16 @@ public final class HttpResponse {
     }
 
     public byte[] toBytes() {
-        if (!headers.containsKey("Content-Length")) {
-            header("Content-Length", String.valueOf(body.length));
-        }
-        if (!headers.containsKey("Connection")) {
-            header("Connection", "close");
-        }
-
         StringBuilder sb = new StringBuilder();
         sb.append("HTTP/1.1 ").append(statusCode).append(" ").append(reasonPhrase(statusCode)).append("\r\n");
         for (Map.Entry<String, String> e : headers.entrySet()) {
             sb.append(e.getKey()).append(": ").append(e.getValue()).append("\r\n");
+        }
+        if (!headers.containsKey("Content-Length")) {
+            sb.append("Content-Length: ").append(body.length).append("\r\n");
+        }
+        if (!headers.containsKey("Connection")) {
+            sb.append("Connection: close\r\n");
         }
         sb.append("\r\n");
 
@@ -94,7 +93,7 @@ public final class HttpResponse {
             case 500 -> "Internal Server Error";
             case 501 -> "Not Implemented";
             case 503 -> "Service Unavailable";
-            default -> "OK";
+            default -> "";
         };
     }
 }

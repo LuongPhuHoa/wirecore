@@ -37,6 +37,7 @@ public final class ConnectionHandler implements Runnable {
     @Override
     public void run() {
         try (Socket s = socket) {
+            s.setSoTimeout(30_000);
             s.setTcpNoDelay(true);
             InputStream in = s.getInputStream();
             OutputStream out = s.getOutputStream();

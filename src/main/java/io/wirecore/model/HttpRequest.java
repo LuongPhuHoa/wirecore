@@ -66,14 +66,6 @@ public final class HttpRequest {
         return body;
     }
 
-    public String getQueryParam(String key) {
-        return queryParam(key);
-    }
-
-    public String getBody() {
-        return body;
-    }
-
     /**
      * Returns a new request with path parameters merged in (routing layer).
      * Empty or null map returns this instance.

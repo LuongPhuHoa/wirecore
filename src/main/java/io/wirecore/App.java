@@ -1,3 +1,5 @@
+package io.wirecore;
+
 import io.wirecore.port.HttpServer;
 import io.wirecore.port.Router;
 import io.wirecore.server.WireServer;
@@ -10,11 +12,11 @@ public class App {
         router.get("/", (req, res) -> res.status(200).body("Welcome to WireCore!"));
 
         router.get("/hello", (req, res) -> {
-            String name = req.getQueryParam("name");
+            String name = req.queryParam("name");
             res.status(200).body("Hello, " + (name != null ? name : "world") + "!");
         });
 
-        router.post("/echo", (req, res) -> res.status(200).body("You sent: " + req.getBody()));
+        router.post("/echo", (req, res) -> res.status(200).body("You sent: " + req.body()));
 
         HttpServer server = new WireServer(8080, router);
         server.start();

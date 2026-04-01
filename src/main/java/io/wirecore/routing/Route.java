@@ -1,18 +1,17 @@
 package io.wirecore.routing;
 
-import io.wirecore.port.RouteHandler;
-import io.wirecore.model.HttpMethod;
+import io.wirecore.http.HttpMethod;
 
 import java.util.Objects;
 
 public final class Route {
     private final HttpMethod method;
-    private final PathTemplate template;
+    private final PathPattern pattern;
     private final RouteHandler handler;
 
-    private Route(HttpMethod method, PathTemplate template, RouteHandler handler) {
+    private Route(HttpMethod method, PathPattern pattern, RouteHandler handler) {
         this.method = method;
-        this.template = template;
+        this.pattern = pattern;
         this.handler = handler;
     }
 
@@ -20,19 +19,18 @@ public final class Route {
         Objects.requireNonNull(method, "method");
         Objects.requireNonNull(pathPattern, "pathPattern");
         Objects.requireNonNull(handler, "handler");
-        return new Route(method, PathTemplate.of(pathPattern), handler);
+        return new Route(method, PathPattern.of(pathPattern), handler);
     }
 
     public HttpMethod method() {
         return method;
     }
 
-    public PathTemplate template() {
-        return template;
+    public PathPattern pattern() {
+        return pattern;
     }
 
     public RouteHandler handler() {
         return handler;
     }
 }
-

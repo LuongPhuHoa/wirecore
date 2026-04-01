@@ -1,8 +1,6 @@
 package io.wirecore.routing;
 
-import io.wirecore.port.RouteHandler;
-import io.wirecore.port.RouteResult;
-import io.wirecore.model.HttpMethod;
+import io.wirecore.http.HttpMethod;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,42 +11,42 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Route storage with deterministic precedence:
- * - exact routes first
- * - then parameterized routes in registration order
+ * Stores registered routes with deterministic resolution precedence:
+ * exact paths are matched before parameterized patterns, and parameterized
+ * patterns are matched in registration order.
  */
-public final class RouteTable {
+public final class RouteRegistry {
     private final Map<HttpMethod, Map<String, RouteHandler>> exact = new HashMap<>();
     private final Map<HttpMethod, List<Route>> parameterized = new HashMap<>();
 
-    public void add(Route route) {
+    public void register(Route route) {
         Objects.requireNonNull(route, "route");
         HttpMethod method = route.method();
 
-        if (!route.template().isParameterized()) {
+        if (!route.pattern().isParameterized()) {
             exact.computeIfAbsent(method, __ -> new HashMap<>())
-                    .put(route.template().pattern(), route.handler());
+                    .put(route.pattern().raw(), route.handler());
             return;
         }
 
         parameterized.computeIfAbsent(method, __ -> new ArrayList<>()).add(route);
     }
 
-    public RouteResult resolve(HttpMethod method, String rawPath) {
+    public RouteMatch resolve(HttpMethod method, String rawPath) {
         String path = PathNormalizer.normalize(rawPath);
 
         Map<String, RouteHandler> exactByPath = exact.get(method);
         if (exactByPath != null) {
             RouteHandler handler = exactByPath.get(path);
-            if (handler != null) return new RouteResult(handler, Map.of());
+            if (handler != null) return new RouteMatch(handler, Map.of());
         }
 
         List<Route> paramRoutes = parameterized.get(method);
         if (paramRoutes == null) return null;
 
         for (Route route : paramRoutes) {
-            Map<String, String> params = route.template().match(path);
-            if (params != null) return new RouteResult(route.handler(), params);
+            Map<String, String> params = route.pattern().match(path);
+            if (params != null) return new RouteMatch(route.handler(), params);
         }
 
         return null;
@@ -68,7 +66,7 @@ public final class RouteTable {
             HttpMethod method = e.getKey();
             if (allowed.contains(method)) continue;
             for (Route route : e.getValue()) {
-                if (route.template().match(path) != null) {
+                if (route.pattern().match(path) != null) {
                     allowed.add(method);
                     break;
                 }
@@ -78,4 +76,3 @@ public final class RouteTable {
         return Set.copyOf(allowed);
     }
 }
-

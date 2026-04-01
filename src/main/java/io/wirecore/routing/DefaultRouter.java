@@ -1,20 +1,15 @@
-package io.wirecore.service;
+package io.wirecore.routing;
 
-import io.wirecore.port.RouteHandler;
-import io.wirecore.port.RouteResult;
-import io.wirecore.port.Router;
-import io.wirecore.model.HttpMethod;
-import io.wirecore.routing.Route;
-import io.wirecore.routing.RouteTable;
+import io.wirecore.http.HttpMethod;
 
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * Default {@link Router} implementation backed by {@link RouteTable}.
+ * Default {@link Router} implementation backed by {@link RouteRegistry}.
  */
 public final class DefaultRouter implements Router {
-    private final RouteTable table = new RouteTable();
+    private final RouteRegistry registry = new RouteRegistry();
 
     @Override
     public DefaultRouter addRoute(String method, String pathPattern, RouteHandler handler) {
@@ -28,7 +23,7 @@ public final class DefaultRouter implements Router {
         Objects.requireNonNull(method, "method");
         Objects.requireNonNull(pathPattern, "pathPattern");
         Objects.requireNonNull(handler, "handler");
-        table.add(Route.of(method, pathPattern, handler));
+        registry.register(Route.of(method, pathPattern, handler));
         return this;
     }
 
@@ -59,8 +54,8 @@ public final class DefaultRouter implements Router {
 
     @Override
     public RouteHandler resolve(HttpMethod method, String rawPath) {
-        RouteResult r = resolveResult(method, rawPath);
-        return r == null ? null : r.handler();
+        RouteMatch match = resolveMatch(method, rawPath);
+        return match == null ? null : match.handler();
     }
 
     @Override
@@ -71,13 +66,13 @@ public final class DefaultRouter implements Router {
     }
 
     @Override
-    public RouteResult resolveResult(HttpMethod method, String rawPath) {
+    public RouteMatch resolveMatch(HttpMethod method, String rawPath) {
         if (method == null) return null;
-        return table.resolve(method, rawPath);
+        return registry.resolve(method, rawPath);
     }
 
     @Override
     public Set<HttpMethod> allowedMethods(String rawPath) {
-        return table.allowedMethods(rawPath);
+        return registry.allowedMethods(rawPath);
     }
 }

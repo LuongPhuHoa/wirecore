@@ -1,6 +1,4 @@
-package io.wirecore.port;
-
-import io.wirecore.model.HttpRequest;
+package io.wirecore.http;
 
 import java.io.IOException;
 import java.io.InputStream;

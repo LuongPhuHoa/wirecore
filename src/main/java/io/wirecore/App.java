@@ -1,24 +1,35 @@
 package io.wirecore;
 
-import io.wirecore.port.HttpServer;
-import io.wirecore.port.Router;
+import io.wirecore.middleware.AuthMiddleware;
+import io.wirecore.middleware.CorsMiddleware;
+import io.wirecore.middleware.LoggingMiddleware;
+import io.wirecore.routing.DefaultRouter;
+import io.wirecore.routing.Router;
 import io.wirecore.server.WireServer;
-import io.wirecore.service.DefaultRouter;
 
 public class App {
     public static void main(String[] args) throws Exception {
         Router router = new DefaultRouter();
 
-        router.get("/", (req, res) -> res.status(200).body("Welcome to WireCore!"));
+        router.get("/", (req, res) ->
+                res.status(200).body("Welcome to WireCore!"));
 
         router.get("/hello", (req, res) -> {
             String name = req.queryParam("name");
             res.status(200).body("Hello, " + (name != null ? name : "world") + "!");
         });
 
-        router.post("/echo", (req, res) -> res.status(200).body("You sent: " + req.body()));
+        router.post("/echo", (req, res) ->
+                res.status(200).body("You sent: " + req.body()));
 
-        HttpServer server = new WireServer(8080, router);
+        router.get("/admin", (req, res) ->
+                res.status(200).body("Welcome to the admin panel!"));
+
+        WireServer server = new WireServer(8080, router);
+
+        server.use(new LoggingMiddleware());
+        server.use(new CorsMiddleware());
+
         server.start();
     }
 }

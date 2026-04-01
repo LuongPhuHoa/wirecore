@@ -1,7 +1,7 @@
-package io.wirecore.port;
+package io.wirecore.routing;
 
-import io.wirecore.model.HttpRequest;
-import io.wirecore.model.HttpResponse;
+import io.wirecore.http.HttpRequest;
+import io.wirecore.http.HttpResponse;
 
 @FunctionalInterface
 public interface RouteHandler {

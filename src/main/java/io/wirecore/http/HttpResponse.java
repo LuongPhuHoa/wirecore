@@ -1,4 +1,4 @@
-package io.wirecore.model;
+package io.wirecore.http;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

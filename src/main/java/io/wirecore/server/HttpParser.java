@@ -1,8 +1,8 @@
 package io.wirecore.server;
 
-import io.wirecore.port.HttpRequestParser;
-import io.wirecore.model.HttpMethod;
-import io.wirecore.model.HttpRequest;
+import io.wirecore.http.HttpMethod;
+import io.wirecore.http.HttpRequest;
+import io.wirecore.http.HttpRequestParser;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.util.Map;
  * Parses an HTTP/1.x request from a raw {@link InputStream}.
  * Body is read by byte count when {@code Content-Length} is present (not line-based).
  */
-public final class DefaultHttpRequestParser implements HttpRequestParser {
+public final class HttpParser implements HttpRequestParser {
     private static final Charset ISO_8859_1 = StandardCharsets.ISO_8859_1;
     private static final int MAX_LINE_LENGTH = 8_192;
     private static final int MAX_HEADER_COUNT = 100;

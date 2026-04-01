@@ -11,26 +11,26 @@ import java.util.Objects;
  * - "/users" (exact)
  * - "/users/:id" (parameterized)
  */
-public final class PathTemplate {
-    private final String pattern;
+public final class PathPattern {
+    private final String raw;
     private final List<String> segments;
     private final boolean parameterized;
 
-    private PathTemplate(String pattern, List<String> segments, boolean parameterized) {
-        this.pattern = pattern;
+    private PathPattern(String raw, List<String> segments, boolean parameterized) {
+        this.raw = raw;
         this.segments = segments;
         this.parameterized = parameterized;
     }
 
-    public static PathTemplate of(String rawPattern) {
+    public static PathPattern of(String rawPattern) {
         String normalized = PathNormalizer.normalize(rawPattern);
         List<String> segs = splitSegments(normalized);
-        boolean param = segs.stream().anyMatch(PathTemplate::isParamSegment);
-        return new PathTemplate(normalized, List.copyOf(segs), param);
+        boolean param = segs.stream().anyMatch(PathPattern::isParamSegment);
+        return new PathPattern(normalized, List.copyOf(segs), param);
     }
 
-    public String pattern() {
-        return pattern;
+    public String raw() {
+        return raw;
     }
 
     public boolean isParameterized() {
@@ -43,7 +43,7 @@ public final class PathTemplate {
         if (pathSegs.size() != segments.size()) return null;
 
         if (!parameterized) {
-            return pattern.equals(path) ? Map.of() : null;
+            return raw.equals(path) ? Map.of() : null;
         }
 
         Map<String, String> out = new HashMap<>();
@@ -76,4 +76,3 @@ public final class PathTemplate {
         return out;
     }
 }
-

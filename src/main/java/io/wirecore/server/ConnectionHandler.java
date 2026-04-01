@@ -1,11 +1,13 @@
 package io.wirecore.server;
 
-import io.wirecore.port.HttpRequestParser;
-import io.wirecore.port.RouteResult;
-import io.wirecore.port.Router;
-import io.wirecore.model.HttpMethod;
-import io.wirecore.model.HttpRequest;
-import io.wirecore.model.HttpResponse;
+import io.wirecore.http.HttpMethod;
+import io.wirecore.http.HttpRequest;
+import io.wirecore.http.HttpRequestParser;
+import io.wirecore.http.HttpResponse;
+import io.wirecore.middleware.Middleware;
+import io.wirecore.middleware.MiddlewareChain;
+import io.wirecore.routing.RouteMatch;
+import io.wirecore.routing.Router;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -14,24 +16,34 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 /**
- * Template method pattern: one connection → parse → dispatch → respond.
+ * Handles a single TCP connection: parse → middleware chain → dispatch → respond.
+ *
+ * <p>The middleware chain wraps the route dispatch step, so every middleware
+ * runs for all requests — including those that end in 404 or 405.
  */
 public final class ConnectionHandler implements Runnable {
     private final Socket socket;
     private final Router router;
     private final HttpRequestParser requestParser;
+    private final List<Middleware> middlewares;
 
-    public ConnectionHandler(Socket socket, Router router, HttpRequestParser requestParser) {
+    public ConnectionHandler(Socket socket, Router router, HttpRequestParser requestParser, List<Middleware> middlewares) {
         this.socket = socket;
         this.router = router;
         this.requestParser = requestParser;
+        this.middlewares = middlewares;
+    }
+
+    public ConnectionHandler(Socket socket, Router router, HttpRequestParser requestParser) {
+        this(socket, router, requestParser, List.of());
     }
 
     public ConnectionHandler(Socket socket, Router router) {
-        this(socket, router, new DefaultHttpRequestParser());
+        this(socket, router, new HttpParser(), List.of());
     }
 
     @Override
@@ -47,7 +59,6 @@ public final class ConnectionHandler implements Runnable {
                 request = requestParser.parse(in);
             } catch (EOFException ex) {
                 if ("empty_request_line".equals(ex.getMessage())) {
-                    // Idle connection or client closed before sending a request line — ignore.
                     return;
                 }
                 System.err.println("Bad request: " + ex.getMessage());
@@ -59,34 +70,10 @@ public final class ConnectionHandler implements Runnable {
                 return;
             }
 
-            System.out.println(request.method() + " " + request.path() + " " + request.queryParams());
-
-            RouteResult match = router.resolveResult(request.method(), request.path());
             HttpResponse response = new HttpResponse();
 
-            if (match == null) {
-                Set<HttpMethod> allowed = router.allowedMethods(request.path());
-                if (!allowed.isEmpty()) {
-                    response.status(405)
-                            .header("Allow", joinAllow(allowed))
-                            .header("Content-Type", "application/json; charset=utf-8")
-                            .body(jsonError(405, "method_not_allowed", "Method Not Allowed", request.method().name(), request.path()));
-                } else {
-                    response.status(404)
-                            .header("Content-Type", "application/json; charset=utf-8")
-                            .body(jsonError(404, "not_found", "Not Found", request.method().name(), request.path()));
-                }
-            } else {
-                HttpRequest reqWithParams = request.withPathParams(match.pathParams());
-                try {
-                    match.handler().handle(reqWithParams, response);
-                } catch (RuntimeException ex) {
-                    System.err.println("Handler error: " + ex.getMessage());
-                    response.status(500)
-                            .header("Content-Type", "application/json; charset=utf-8")
-                            .body(jsonError(500, "internal_error", "Internal Server Error", request.method().name(), request.path()));
-                }
-            }
+            new MiddlewareChain(middlewares, (req, res) -> dispatch(req, res))
+                    .execute(request, response);
 
             out.write(response.toBytes());
             out.flush();
@@ -94,6 +81,37 @@ public final class ConnectionHandler implements Runnable {
             // Client reset / closed — ignore
         } catch (IOException ex) {
             System.err.println("Connection I/O error: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Terminal step: resolves the route and invokes the handler, or produces 404/405.
+     */
+    private void dispatch(HttpRequest request, HttpResponse response) {
+        RouteMatch match = router.resolveMatch(request.method(), request.path());
+
+        if (match == null) {
+            Set<HttpMethod> allowed = router.allowedMethods(request.path());
+            if (!allowed.isEmpty()) {
+                response.status(405)
+                        .header("Allow", joinAllow(allowed))
+                        .header("Content-Type", "application/json; charset=utf-8")
+                        .body(jsonError(405, "method_not_allowed", "Method Not Allowed", request.method().name(), request.path()));
+            } else {
+                response.status(404)
+                        .header("Content-Type", "application/json; charset=utf-8")
+                        .body(jsonError(404, "not_found", "Not Found", request.method().name(), request.path()));
+            }
+        } else {
+            HttpRequest reqWithParams = request.withPathParams(match.pathParams());
+            try {
+                match.handler().handle(reqWithParams, response);
+            } catch (RuntimeException ex) {
+                System.err.println("Handler error: " + ex.getMessage());
+                response.status(500)
+                        .header("Content-Type", "application/json; charset=utf-8")
+                        .body(jsonError(500, "internal_error", "Internal Server Error", request.method().name(), request.path()));
+            }
         }
     }
 
@@ -114,7 +132,6 @@ public final class ConnectionHandler implements Runnable {
     }
 
     private static String joinAllow(Set<HttpMethod> methods) {
-        // Deterministic order (REST friendliness).
         StringBuilder sb = new StringBuilder();
         HttpMethod[] order = {
                 HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH,
@@ -128,7 +145,6 @@ public final class ConnectionHandler implements Runnable {
             sb.append(m.name());
             first = false;
         }
-        // If caller stored some non-standard method someday, fall back to set iteration:
         if (first) {
             for (HttpMethod m : methods) {
                 if (!first) sb.append(", ");
@@ -140,7 +156,6 @@ public final class ConnectionHandler implements Runnable {
     }
 
     private static String jsonError(int status, String code, String message, String method, String path) {
-        // Small, dependency-free JSON.
         return "{"
                 + "\"timestamp\":\"" + escapeJson(Instant.now().toString()) + "\","
                 + "\"status\":" + status + ","

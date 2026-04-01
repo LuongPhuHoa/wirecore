@@ -1,4 +1,4 @@
-package io.wirecore.model;
+package io.wirecore.http;
 
 import java.util.Collections;
 import java.util.HashMap;

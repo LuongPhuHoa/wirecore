@@ -1,12 +1,12 @@
-package io.wirecore.port;
+package io.wirecore.routing;
 
-import io.wirecore.model.HttpMethod;
+import io.wirecore.http.HttpMethod;
 
 import java.util.Set;
 
 /**
- * Contract for HTTP routing: registration and resolution.
- * Implementations live in {@link io.wirecore.service.DefaultRouter}.
+ * Contract for HTTP routing: route registration and resolution.
+ * The default implementation is {@link DefaultRouter}.
  */
 public interface Router {
     Router addRoute(String method, String pathPattern, RouteHandler handler);
@@ -30,8 +30,8 @@ public interface Router {
     RouteHandler resolve(String method, String rawPath);
 
     /** Returns null when not found. */
-    RouteResult resolveResult(HttpMethod method, String rawPath);
+    RouteMatch resolveMatch(HttpMethod method, String rawPath);
 
-    /** Methods that would match this path (for 405 + Allow). */
+    /** Methods that would match this path (for 405 + Allow header). */
     Set<HttpMethod> allowedMethods(String rawPath);
 }

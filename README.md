@@ -423,10 +423,10 @@ Phase 7  →  "I can extend a framework with real features"
 
 ```bash
 # Compile
-javac -d bin src/**/*.java
+javac -d bin $(find src/main -name "*.java")
 
 # Run
-java -cp bin App
+java -cp bin io.wirecore.App
 ```
 
 Server starts on `http://localhost:8080`.
